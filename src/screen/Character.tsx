@@ -1,44 +1,48 @@
+import { useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
-import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-
+import { fetchCharacterList } from "../api";
 const Container = styled.div`
-  padding: 0px 20px;
-  background-color: ${(props) => props.theme.bgColor};
+  background-color: #474787;
 `;
 const Header = styled.header`
   height: 15vh;
   display: flex;
   justify-content: center;
-  algin-items: center;
+  align-items: center;
+  padding: 10px 40px;
 `;
-const Title = styled.h1`
+const Title = styled.h2`
   font-size: 48px;
-  color: ${(props) => props.theme.accentColor};
+  color: #ffffff;
 `;
-const CharacterList = styled.ul`
-  list-style: none;
+const CharacterListBox = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
 `;
-const CharacterItem = styled.li`
-  background-color: white;
-  color: ${(props) => props.theme.bgColor};
-  border-radius: 15px;
-  margin-bottom: 10px;
-  max-width: 420px;
+const CharacterItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #1e272e;
+  margin-bottom: 20px;
+  padding: 10px;
+  border-radius: 10px;
   a {
     text-decoration: none;
-    color: ${(props) => props.theme.darkTextColor};
-    padding: 20px;
-    transition: color 0.2s ease-in;
+    color: white;
+    // padding: 10px 15px;
+    transition: color 0.1s ease-in;
     display: flex;
     flex-direction: column;
     align-items: center;
+    &:hover {
+      color: black;
+    }
   }
   &:hover {
-    a {
-      color: ${(props) => props.theme.accentColor};
-    }
+    background-color: white;
   }
 `;
 
@@ -54,52 +58,36 @@ const Img = styled.img`
   object-fit: cover;
 `;
 
-interface CharInterface {
+interface CharsInterface {
   id: number;
   name: string;
   imageUrl: string;
 }
 
 export default function Character() {
-  const [characters, setCharacters] = useState<CharInterface[]>();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCharacters = async () => {
-      try {
-        const response = await fetch(
-          "https://disney_api.nomadcoders.workers.dev/characters"
-        );
-        const json = await response.json();
-        setCharacters(json.slice(0, 100));
-        console.log(json);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching characters:", error);
-      }
-    };
-
-    fetchCharacters();
-  }, []);
+  const { isLoading, data } = useQuery<CharsInterface[]>(
+    "allCharacters",
+    fetchCharacterList
+  );
 
   return (
     <Container>
       <Header>
         <Title>Disney Characters</Title>
       </Header>
-      {loading ? (
+      {isLoading ? (
         <Loader>Loading...</Loader>
       ) : (
-        <CharacterList>
-          {characters?.map((char) => (
+        <CharacterListBox>
+          {data?.map((char) => (
             <CharacterItem key={char.id}>
-              <Link to={`/characters/${char.id}`} state={char.id}>
+              <Link to={`/characters/${char.id}`} state={{ id: char.id }}>
                 <Img src={char.imageUrl} />
                 {char.name}
               </Link>
             </CharacterItem>
           ))}
-        </CharacterList>
+        </CharacterListBox>
       )}
     </Container>
   );
